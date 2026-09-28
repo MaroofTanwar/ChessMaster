@@ -1,0 +1,14 @@
+{
+  "name": "chessmaster-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "install:all": "npm --prefix client install && npm --prefix server install",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-chessmaster \"npm --prefix client run test:rules\""
+  },
+  "devDependencies": {
+    "firebase-tools": "^15.30.0"
+  }
+}

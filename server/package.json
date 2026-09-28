@@ -1,0 +1,32 @@
+{
+  "name": "chessmaster-server",
+  "version": "1.0.0",
+  "description": "Express backend server for ChessMaster",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test tests/gameManager.test.mjs tests/elo.test.mjs tests/aiEngine.test.mjs tests/socialManager.test.mjs tests/matchmakingManager.test.mjs tests/analysis.test.mjs tests/settings.test.mjs tests/security.test.mjs tests/httpSecurity.test.mjs",
+    "test:multiplayer": "node tests/liveMultiplayer.mjs",
+    "test:browser": "node tests/liveBrowserMultiplayer.mjs",
+    "test:quick-match": "node tests/liveQuickMatchBrowser.mjs",
+    "test:social": "node tests/liveSocialBrowser.mjs",
+    "test:analysis": "node tests/liveAnalysisBrowser.mjs",
+    "test:settings": "node tests/liveSettingsBrowser.mjs",
+    "test:security-live": "node tests/liveSecurity.mjs"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^9.1.0",
+    "chess.js": "^1.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "firebase-admin": "^14.4.0",
+    "socket.io": "^4.8.3",
+    "stockfish": "^19.0.0"
+  },
+  "devDependencies": {
+    "socket.io-client": "^4.8.3"
+  }
+}

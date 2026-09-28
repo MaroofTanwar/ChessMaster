@@ -1,0 +1,54 @@
+# Dependencies and generated build output
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+.vite/
+.turbo/
+
+# Local environment files (safe placeholder examples remain trackable)
+.env
+.env.*
+!.env.example
+
+# Firebase Admin and other private credential files
+**/*service-account*.json
+**/*service_account*.json
+**/*serviceAccount*.json
+**/*firebase-admin*.json
+**/*firebaseAdmin*.json
+**/*adminsdk*.json
+**/*credentials*.json
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Firebase local state and logs
+.firebase/
+*.log
+firebase-debug.log*
+firestore-debug.log*
+
+# Test and tool output
+playwright-report/
+test-results/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Local editor and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini

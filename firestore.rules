@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+    function validSettings(settings) {
+      return settings is map
+        && settings.keys().hasAll([
+          'boardTheme', 'pieceStyle', 'showCoordinates', 'showLegalMoves',
+          'highlightLastMove', 'moveAnimations', 'autoQueen', 'confirmResign',
+          'masterSound', 'moveSounds', 'captureSounds', 'checkSounds',
+          'gameEndSounds', 'inAppNotifications'
+        ])
+        && settings.keys().hasOnly([
+          'boardTheme', 'pieceStyle', 'showCoordinates', 'showLegalMoves',
+          'highlightLastMove', 'moveAnimations', 'autoQueen', 'confirmResign',
+          'masterSound', 'moveSounds', 'captureSounds', 'checkSounds',
+          'gameEndSounds', 'inAppNotifications'
+        ])
+        && settings.boardTheme in ['midnight', 'classic', 'ocean', 'forest', 'royal']
+        && settings.pieceStyle == 'standard'
+        && settings.showCoordinates is bool
+        && settings.showLegalMoves is bool
+        && settings.highlightLastMove is bool
+        && settings.moveAnimations is bool
+        && settings.autoQueen is bool
+        && settings.confirmResign is bool
+        && settings.masterSound is bool
+        && settings.moveSounds is bool
+        && settings.captureSounds is bool
+        && settings.checkSounds is bool
+        && settings.gameEndSounds is bool
+        && settings.inAppNotifications is bool;
+    }
+    function validProfile(data) {
+      return data.keys().hasAll([
+          'username', 'email', 'avatar', 'rating', 'wins', 'losses',
+          'draws', 'gamesPlayed', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'username', 'email', 'avatar', 'rating', 'wins', 'losses',
+          'draws', 'gamesPlayed', 'createdAt', 'updatedAt', 'settings'
+        ])
+        && data.username is string
+        && data.username.size() >= 3 && data.username.size() <= 30
+        && data.email is string && data.email.size() <= 320
+        && data.avatar is string && data.avatar.size() <= 2048
+        && data.rating is int && data.rating >= 0
+        && data.wins is int && data.wins >= 0
+        && data.losses is int && data.losses >= 0
+        && data.draws is int && data.draws >= 0
+        && data.gamesPlayed is int && data.gamesPlayed >= 0
+        && data.createdAt is timestamp && data.updatedAt is timestamp
+        && (!data.keys().hasAny(['settings']) || validSettings(data.settings));
+    }
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && validProfile(request.resource.data)
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.rating == 1200
+        && request.resource.data.wins == 0
+        && request.resource.data.losses == 0
+        && request.resource.data.draws == 0
+        && request.resource.data.gamesPlayed == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isOwner(uid)
+        && validProfile(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['username', 'avatar', 'settings', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time;
+      // No listing, client deletion, email changes, or client-written chess results.
+    }
+    match /games/{gameId} {
+      allow read: if request.auth != null
+        && (resource.data.whitePlayerUid == request.auth.uid
+          || resource.data.blackPlayerUid == request.auth.uid);
+      allow write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

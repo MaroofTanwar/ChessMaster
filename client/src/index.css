@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-main: #090a0f;
+    --bg-surface: #10121b;
+    --bg-card: #161824;
+    --bg-glass: rgba(18, 20, 32, 0.7);
+    --border-glass: rgba(255, 255, 255, 0.08);
+    --border-glass-hover: rgba(139, 92, 246, 0.3);
+    
+    --primary: #8b5cf6;
+    --primary-hover: #7c3aed;
+    --cyan: #06b6d4;
+    --cyan-hover: #0891b2;
+    --gold: #f59e0b;
+    --emerald: #10b981;
+    --rose: #f43f5e;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0b10;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2235;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2e3550;
+}
+
+/* Custom Utility Classes */
+.bg-glass {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.border-glass {
+  border-color: var(--border-glass);
+}
+
+.hover-glow-purple:hover {
+  box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.3);
+}
+
+.hover-glow-cyan:hover {
+  box-shadow: 0 0 25px -5px rgba(6, 182, 212, 0.3);
+}
+
+.text-gradient-purple-cyan {
+  background: linear-gradient(135deg, #a78bfa 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-radial-gradient {
+  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.15) 0%, rgba(6, 182, 212, 0.05) 45%, transparent 70%);
+}
+
+.chess-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
