@@ -7,6 +7,7 @@ import aiGamesRoutes from './routes/aiGames.routes.js';
 import socialRoutes from './routes/social.routes.js';
 import analysisRoutes from './routes/analysis.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
+import platformStatsRoutes from './routes/platformStats.routes.js';
 import { securityHeaders } from './middleware/security.js';
 
 dotenv.config();
@@ -33,6 +34,7 @@ app.use('/api', aiGamesRoutes);
 app.use('/api', socialRoutes);
 app.use('/api', analysisRoutes);
 app.use('/api', settingsRoutes);
+app.use('/api', platformStatsRoutes);
 app.use(['/api/auth', '/api/users'], (req, res) => {
   res.status(410).json({ error: 'Use Firebase Authentication and Firestore from the frontend.' });
 });

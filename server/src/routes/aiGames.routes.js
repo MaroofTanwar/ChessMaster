@@ -4,7 +4,8 @@ import { Chess } from 'chess.js';
 import { FieldValue } from 'firebase-admin/firestore';
 import { adminDb } from '../config/firebaseAdmin.js';
 import { requireFirebaseUser } from '../middleware/requireFirebaseUser.js';
-import { requestAIMove } from '../ai/aiEngineService.js';
+import { aiMoveCoordinator } from '../ai/aiMoveCoordinator.js';
+import { isAIDifficulty } from '../ai/aiConfig.js';
 import { createRateLimiter } from '../middleware/security.js';
 import { isFenInput, isSquare } from '../utils/validation.js';
 
@@ -15,12 +16,18 @@ const publicMove = (move) => ({ color: move.color, from: move.from, to: move.to,
 
 router.post('/ai-move', requireFirebaseUser, aiMoveLimit, async (req, res, next) => {
   try {
-    const { fen, difficulty } = req.body || {};
-    if (!isFenInput(fen) || !['Beginner', 'Easy', 'Medium', 'Hard', 'Expert'].includes(difficulty)) return res.status(400).json({ error: 'Invalid AI request.' });
+    const { fen, difficulty, requestId } = req.body || {};
+    if (!isFenInput(fen) || !isAIDifficulty(difficulty)) return res.status(400).json({ error: 'Invalid AI request.' });
+    if (requestId !== undefined && (typeof requestId !== 'string' || !/^[a-zA-Z0-9_-]{8,80}$/.test(requestId))) return res.status(400).json({ error: 'Invalid AI request ID.' });
     let position;
     try { position = new Chess(fen); } catch { return res.status(400).json({ error: 'The supplied chess position is invalid.' }); }
     if (position.isGameOver()) return res.status(400).json({ error: 'The supplied chess game has already ended.' });
-    const move = await requestAIMove(fen, difficulty);
+    const move = await aiMoveCoordinator.run({
+      uid: req.firebaseUser.uid,
+      requestId: requestId || randomUUID(),
+      fen,
+      difficulty,
+    });
     if (!move) return res.status(422).json({ error: 'The AI engine did not return a move.' });
     let applied;
     try { applied = position.move(move); } catch { applied = null; }
@@ -33,7 +40,7 @@ router.post('/ai-games', requireFirebaseUser, aiGameLimit, async (req, res, next
   try {
     const { moves, humanColor, aiDifficulty, reason, winnerColor: claimedWinnerColor, startedAt, timeControl } = req.body || {};
     if (!['w', 'b'].includes(humanColor) || !Array.isArray(moves) || moves.length > 1000) return res.status(400).json({ error: 'Invalid AI game data.' });
-    if (!['Beginner', 'Easy', 'Medium', 'Hard', 'Expert'].includes(aiDifficulty)) return res.status(400).json({ error: 'Invalid AI difficulty.' });
+    if (!isAIDifficulty(aiDifficulty)) return res.status(400).json({ error: 'Invalid AI difficulty.' });
     const chess = new Chess();
     const normalizedMoves = [];
     for (const candidate of moves) {

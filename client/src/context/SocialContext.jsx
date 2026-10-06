@@ -77,7 +77,7 @@ export function SocialProvider({ children }) {
     if (!socket?.connected) return resolve({ ok: false, error: { message: 'The live server is unavailable.' } });
     socket.timeout(8000).emit(event, payload, (timeout, response) => resolve(timeout ? { ok: false, error: { message: 'The server did not respond.' } } : response));
   }), []);
-  const waitForLiveSocket = useCallback((timeoutMs = 5000) => new Promise((resolve) => {
+  const waitForLiveSocket = useCallback((timeoutMs = 75_000) => new Promise((resolve) => {
     const deadline = Date.now() + timeoutMs;
     const check = () => {
       if (socketRef.current?.connected) { resolve(true); return; }

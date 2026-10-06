@@ -53,6 +53,7 @@ export const GameSidebar = ({
   currentUserUid = null,
   onSendChatMessage = null,
   className = '',
+  mobileSheet = false,
 }) => {
   const { addToast } = useToast();
   const [activeTab, setActiveTab] = useState('moves'); // 'moves' | 'info' | 'chat'
@@ -68,7 +69,7 @@ export const GameSidebar = ({
   const chatMessages = isServerChat ? serverChatMessages : localChatMessages;
 
   useEffect(() => {
-    if (activeTab === 'chat') chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (activeTab === 'chat') chatEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
   }, [activeTab, chatMessages]);
 
   const handleCopyPgn = () => {
@@ -115,7 +116,7 @@ export const GameSidebar = ({
     if (isCheckmate) {
       const winnerName = winner === 'w' ? 'White' : 'Black';
       return {
-        text: `♚ Checkmate! ${winnerName} Wins!`,
+        text: `Checkmate! ${winnerName} Wins!`,
         cls: 'text-amber-300 bg-amber-500/15 border-amber-400/40 font-black shadow-[0_0_12px_rgba(251,191,36,0.3)] animate-pulse',
       };
     }
@@ -136,7 +137,7 @@ export const GameSidebar = ({
       return { text: '½ Game Drawn', cls: 'text-amber-400 bg-amber-500/15 border-amber-500/30 font-bold' };
     }
     if (isCheck) {
-      return { text: '♚ Check!', cls: 'text-rose-400 bg-rose-500/15 border-rose-500/30 font-bold animate-pulse' };
+      return { text: 'Check!', cls: 'text-rose-400 bg-rose-500/15 border-rose-500/30 font-bold animate-pulse' };
     }
     return {
       text: turn === 'w' ? '⬜ White to move' : '⬛ Black to move',
@@ -147,9 +148,9 @@ export const GameSidebar = ({
   const status = getStatusBadge();
 
   return (
-    <Card className={clsx('flex flex-col border-white/10 overflow-hidden', className)}>
+    <Card data-testid="game-sidebar" className={clsx('flex flex-col border-white/10 overflow-hidden', mobileSheet && 'rounded-t-[1.75rem] rounded-b-xl sm:rounded-2xl', className)}>
       {/* Top Status Header */}
-      <div className="flex items-center justify-between gap-2 p-3.5 border-b border-white/10 bg-black/20">
+      <div className={clsx('flex items-center justify-between gap-2 border-b border-white/10 bg-black/20', mobileSheet ? 'p-2 sm:p-3.5' : 'p-3.5')}>
         <div className={`px-3 py-1 rounded-full border text-xs tracking-wide transition-all ${status.cls}`}>
           {status.text}
         </div>
@@ -184,8 +185,10 @@ export const GameSidebar = ({
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center border-b border-white/10 bg-slate-950/40">
+      <div role="tablist" aria-label="Game panel" className="flex items-center border-b border-white/10 bg-slate-950/40">
         <button
+          role="tab"
+          aria-selected={activeTab === 'moves'}
           onClick={() => setActiveTab('moves')}
           className={clsx(
             'flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all border-b-2',
@@ -199,6 +202,8 @@ export const GameSidebar = ({
         </button>
 
         <button
+          role="tab"
+          aria-selected={activeTab === 'info'}
           onClick={() => setActiveTab('info')}
           className={clsx(
             'flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all border-b-2',
@@ -212,6 +217,8 @@ export const GameSidebar = ({
         </button>
 
         <button
+          role="tab"
+          aria-selected={activeTab === 'chat'}
           onClick={() => setActiveTab('chat')}
           className={clsx(
             'flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold transition-all border-b-2',
@@ -226,7 +233,7 @@ export const GameSidebar = ({
       </div>
 
       {/* Tab Contents */}
-      <div className="flex-1 p-3 min-h-[220px] max-h-[340px] overflow-y-auto">
+      <div className={clsx('flex-1 overflow-y-auto', mobileSheet ? 'p-2 min-h-[132px] max-h-[168px] sm:p-3 sm:min-h-[220px] sm:max-h-[340px]' : 'p-3 min-h-[220px] max-h-[340px]')}>
         {/* Moves Tab */}
         {activeTab === 'moves' && (
           <div className="flex flex-col h-full justify-between gap-3">
@@ -369,7 +376,7 @@ export const GameSidebar = ({
       </div>
 
       {/* Bottom Tournament Controls */}
-      <div className="p-3 border-t border-white/10 bg-black/30">
+      <div className={clsx('border-t border-white/10 bg-black/30', mobileSheet ? 'p-2 sm:p-3' : 'p-3')}>
         <div className="grid grid-cols-5 gap-1.5">
           <button
             onClick={onUndo}

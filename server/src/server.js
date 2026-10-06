@@ -9,6 +9,7 @@ const PORT = process.env.PORT || 5000;
 const httpServer = createServer(app);
 const { io, manager, socialManager } = createSocketServer(httpServer);
 app.set('io', io);
+app.set('socialManager', socialManager);
 
 httpServer.listen(PORT, () => {
   console.log(`[ChessMaster Server] Listening on port ${PORT}`);

@@ -43,10 +43,13 @@ export default function useMultiplayerGame(firebaseUser, user) {
     const onConnect = () => { setConnectionState('connected'); setError(null); };
     const onDisconnect = () => setConnectionState('reconnecting');
     const onConnectError = (problem) => {
-      setConnectionState('error');
-      setError(problem.data?.code === 'AUTH_FAILED'
-        ? 'Your multiplayer session could not be verified. Sign out and sign in again.'
-        : 'The multiplayer server is unavailable. Check that the backend is running.');
+      if (problem.data?.code === 'AUTH_FAILED') {
+        setConnectionState('error');
+        setError('Your multiplayer session could not be verified. Sign out and sign in again.');
+        return;
+      }
+      setConnectionState('reconnecting');
+      setError(null);
     };
     const onSocketError = (problem) => setError(problem?.message || 'The multiplayer server rejected that action.');
     const onState = (next) => applyState(next.state || next);

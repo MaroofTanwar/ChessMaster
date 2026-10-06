@@ -1,10 +1,12 @@
 import { Chess } from 'chess.js';
+import { AI_DIFFICULTIES, AI_DIFFICULTY_ORDER } from '../config/aiDifficulty';
 
 const VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
-export const AI_SETTINGS = {
-  Beginner: { depth: 1, variety: 5, delay: 350 }, Easy: { depth: 1, variety: 3, delay: 450 },
-  Medium: { depth: 2, variety: 2, delay: 550 }, Hard: { depth: 3, variety: 1, delay: 650 }, Expert: { depth: 4, variety: 1, delay: 750 },
-};
+export const AI_SETTINGS = Object.freeze(Object.fromEntries(AI_DIFFICULTY_ORDER.map((name) => [name, Object.freeze({
+  depth: AI_DIFFICULTIES[name].fallbackDepth,
+  variety: AI_DIFFICULTIES[name].multiPv,
+  delay: AI_DIFFICULTIES[name].moveTime,
+})])));
 const moveData = (move) => ({ from: move.from, to: move.to, promotion: move.promotion || 'q' });
 const evaluate = (game, color) => {
   if (game.isCheckmate()) return game.turn() === color ? -100000 : 100000;

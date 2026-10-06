@@ -8,8 +8,9 @@ import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useSocial } from '../../context/SocialContext';
 import Modal from '../ui/Modal';
+import { clsx } from 'clsx';
 
-export const Navbar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
+export const Navbar = ({ isMobileMenuOpen, setIsMobileMenuOpen, compactMobile = false }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { addToast } = useToast();
@@ -52,29 +53,29 @@ export const Navbar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-xl border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className={clsx('max-w-7xl mx-auto sm:px-6 lg:px-8 flex items-center justify-between', compactMobile ? 'h-14 px-2 gap-1.5 sm:h-16 sm:gap-4' : 'h-16 px-4 gap-4')}>
         {/* Left: Brand Logo & Mobile Toggle */}
-        <div className="flex items-center gap-3">
+        <div className={clsx('flex items-center min-w-0', compactMobile ? 'gap-1.5 sm:gap-3' : 'gap-3')}>
           {!isLandingPage && (
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors"
+              className={clsx('lg:hidden text-slate-400 hover:text-white rounded-xl hover:bg-white/5 transition-colors shrink-0', compactMobile ? 'p-1.5 sm:p-2' : 'p-2')}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           )}
 
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 p-0.5 shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all duration-300">
+          <Link to="/" className={clsx('flex items-center group min-w-0', compactMobile ? 'gap-1.5 sm:gap-2.5' : 'gap-2.5')}>
+            <div className={clsx('rounded-xl bg-gradient-to-tr from-purple-600 to-cyan-500 p-0.5 shadow-lg shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all duration-300 shrink-0', compactMobile ? 'w-8 h-8 sm:w-10 sm:h-10' : 'w-10 h-10')}>
               <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-purple-400 group-hover:text-cyan-300 transition-colors">
                 <Crown className="w-5 h-5" />
               </div>
             </div>
             <div className="flex flex-col">
-              <span className="font-extrabold text-lg tracking-wider text-slate-100 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-cyan-400 transition-all">
+              <span className={clsx('font-extrabold tracking-wider text-slate-100 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-purple-400 group-hover:to-cyan-400 transition-all whitespace-nowrap', compactMobile ? 'text-sm min-[380px]:text-base sm:text-lg' : 'text-lg')}>
                 CHESS<span className="text-purple-500">MASTER</span>
               </span>
-              <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold -mt-1">
+              <span className={clsx('text-[9px] uppercase tracking-widest text-slate-400 font-bold -mt-1', compactMobile && 'hidden sm:block')}>
                 Grandmaster Edition
               </span>
             </div>
@@ -103,9 +104,9 @@ export const Navbar = ({ isMobileMenuOpen, setIsMobileMenuOpen }) => {
         )}
 
         {/* Right: User Actions / Auth Buttons */}
-        <div className="flex items-center gap-3">
+        <div className={clsx('flex items-center shrink-0', compactMobile ? 'gap-1 sm:gap-3' : 'gap-3')}>
           {!isAuthenticated ? (
-            <div className="flex items-center gap-3">
+            <div className={clsx('flex items-center', compactMobile ? 'gap-1 sm:gap-3' : 'gap-3')}>
               <Link to="/login">
                 <Button size="sm" variant="ghost">
                   Sign In

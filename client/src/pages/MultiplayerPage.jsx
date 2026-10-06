@@ -117,34 +117,35 @@ export default function MultiplayerPage() {
     isLowTime={clocks[color] < 30 && clocks[color] > 0}
     capturedPieces={color === 'w' ? derived.capturedBlack : derived.capturedWhite}
     materialAdvantage={color === 'w' ? Math.max(derived.advantage, 0) : Math.max(-derived.advantage, 0)}
-    isGameOver={state.status === 'finished'} />;
+    isGameOver={state.status === 'finished'} compactOnMobile />;
 
   return (
-    <AppLayout>
+    <AppLayout mobileGame>
       <GameOverModal isOpen={gameOverOpen} onClose={() => setGameOverOpen(false)} winner={state.result?.winnerColor}
         reason={resultReason} isCheckmate={state.result?.reason === 'checkmate'} moveCount={state.history.length}
         gameMode={state.gameMode} rating={myColor ? state.result?.rating?.[myColor] : null}
         onNewGame={multiplayer.requestRematch} primaryLabel={state.rematchRequestedBy === myColor ? 'Rematch Requested' : 'Request Rematch'}
         primaryDisabled={state.rematchRequestedBy === myColor} secondaryLabel="Exit Game" onSecondary={exit} />
       <ConfirmResignModal isOpen={resignOpen} onClose={() => setResignOpen(false)} onConfirm={multiplayer.resign} />
-      <div className="flex flex-col gap-5 max-w-7xl mx-auto">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><div className="flex items-center gap-2"><h1 className="text-2xl sm:text-3xl font-black text-slate-100">Live Chess Arena</h1><Badge variant={multiplayer.connectionState === 'connected' ? 'cyan' : 'rose'} icon={multiplayer.connectionState === 'connected' ? Wifi : WifiOff}>{multiplayer.connectionState === 'connected' ? 'Connected' : 'Reconnecting'}</Badge></div><p className="text-xs text-slate-400 mt-1">Room {state.roomId} · You play {myColor === 'w' ? 'White' : 'Black'} · Rapid 10+0 · <span className="capitalize">{state.gameMode || 'ranked'}</span></p></div>
+      <div className="flex flex-col gap-2 sm:gap-5 max-w-7xl mx-auto">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-2 sm:px-0 sm:gap-3">
+          <div><div className="flex items-center gap-2"><h1 className="text-lg sm:text-3xl font-black text-slate-100">Live Chess Arena</h1><Badge variant={multiplayer.connectionState === 'connected' ? 'cyan' : 'rose'} icon={multiplayer.connectionState === 'connected' ? Wifi : WifiOff}>{multiplayer.connectionState === 'connected' ? 'Connected' : 'Reconnecting'}</Badge></div><p className="hidden sm:block text-xs text-slate-400 mt-1">Room {state.roomId} · You play {myColor === 'w' ? 'White' : 'Black'} · Rapid 10+0 · <span className="capitalize">{state.gameMode || 'ranked'}</span></p></div>
           <div className="flex gap-2"><Button size="sm" variant="secondary" icon={Copy} onClick={() => navigator.clipboard.writeText(state.roomId)}>Copy ID</Button><Button size="sm" variant="danger" icon={DoorOpen} onClick={exit}>Exit</Button></div>
         </div>
         {multiplayer.error && <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm">{multiplayer.error}</div>}
         {(!state.players.w?.connected || !state.players.b?.connected) && state.status === 'active' && <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm">Opponent disconnected. Their seat and current game are being kept for reconnection.</div>}
         {incomingDraw && <Card className="p-4 border-emerald-500/30 flex items-center justify-between gap-3"><span>Your opponent offered a draw.</span><div className="flex gap-2"><Button size="sm" variant="cyan" onClick={multiplayer.acceptDraw}>Accept</Button><Button size="sm" variant="secondary" onClick={multiplayer.declineDraw}>Decline</Button></div></Card>}
         {incomingRematch && <Card className="p-4 border-purple-500/30 flex items-center justify-between gap-3"><span>Your opponent requested a rematch. Colors will swap.</span><div className="flex gap-2"><Button size="sm" onClick={async () => { await multiplayer.acceptRematch(); setGameOverOpen(false); }}>Accept</Button><Button size="sm" variant="secondary" onClick={multiplayer.declineRematch}>Decline</Button></div></Card>}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
-          <Card className="p-3.5 sm:p-5 border-white/10 flex flex-col gap-3 shadow-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-3 sm:gap-6 items-start">
+          <Card className="p-1.5 sm:p-5 border-white/10 flex flex-col gap-1.5 sm:gap-3 shadow-2xl rounded-xl sm:rounded-2xl">
             {renderPlayer(topColor)}
-            <div className="flex justify-center py-1"><ChessBoard board={board} selectedSquare={multiplayer.selectedSquare} legalMoves={multiplayer.legalMoves} lastMove={state.lastMove} inCheckSquare={derived.checkSquare} boardOrientation={orientation} pendingPromotion={multiplayer.pendingPromotion} turn={state.turn} onSquareClick={multiplayer.selectSquare} onPromotionSelect={multiplayer.completePromotion} onPromotionCancel={multiplayer.cancelPromotion} isGameOver={state.status !== 'active'} isCheckmate={game.isCheckmate()} /></div>
+            <div className="flex justify-center"><ChessBoard board={board} selectedSquare={multiplayer.selectedSquare} legalMoves={multiplayer.legalMoves} lastMove={state.lastMove} inCheckSquare={derived.checkSquare} boardOrientation={orientation} pendingPromotion={multiplayer.pendingPromotion} turn={state.turn} onSquareClick={multiplayer.selectSquare} onPromotionSelect={multiplayer.completePromotion} onPromotionCancel={multiplayer.cancelPromotion} isGameOver={state.status !== 'active'} isCheckmate={game.isCheckmate()} mobileOptimized /></div>
             {renderPlayer(bottomColor)}
           </Card>
-          <GameSidebar history={state.history} currentMoveIndex={state.history.length - 1} fen={state.fen} opening={detectOpening(state.history)} turn={state.turn} isCheck={game.inCheck()} isCheckmate={game.isCheckmate()} isStalemate={state.result?.reason === 'stalemate'} isDraw={state.status === 'finished' && !state.result?.winnerColor} isGameOver={state.status === 'finished'} winner={state.result?.winnerColor} gameStatus={gameStatus} canUndo={false} canRedo={false} currentPreset={{ name: 'Rapid 10+0' }} isMuted={isMuted} onResign={() => settings.confirmResign ? setResignOpen(true) : multiplayer.resign()} onOfferDraw={multiplayer.offerDraw} onNewGame={() => addToast('Multiplayer games cannot be reset while active.', 'info')} onRematch={multiplayer.requestRematch} onFlipBoard={() => addToast('Your board follows your assigned color.', 'info')} onToggleSound={toggleMute} onOpenTimeControl={() => addToast('Multiplayer uses server-controlled Rapid 10+0.', 'info')} chatMessages={multiplayer.chatMessages} currentUserUid={firebaseUser?.uid} onSendChatMessage={multiplayer.sendChatMessage} />
+          <GameSidebar history={state.history} currentMoveIndex={state.history.length - 1} fen={state.fen} opening={detectOpening(state.history)} turn={state.turn} isCheck={game.inCheck()} isCheckmate={game.isCheckmate()} isStalemate={state.result?.reason === 'stalemate'} isDraw={state.status === 'finished' && !state.result?.winnerColor} isGameOver={state.status === 'finished'} winner={state.result?.winnerColor} gameStatus={gameStatus} canUndo={false} canRedo={false} currentPreset={{ name: 'Rapid 10+0' }} isMuted={isMuted} onResign={() => settings.confirmResign ? setResignOpen(true) : multiplayer.resign()} onOfferDraw={multiplayer.offerDraw} onNewGame={() => addToast('Multiplayer games cannot be reset while active.', 'info')} onRematch={multiplayer.requestRematch} onFlipBoard={() => addToast('Your board follows your assigned color.', 'info')} onToggleSound={toggleMute} onOpenTimeControl={() => addToast('Multiplayer uses server-controlled Rapid 10+0.', 'info')} chatMessages={multiplayer.chatMessages} currentUserUid={firebaseUser?.uid} onSendChatMessage={multiplayer.sendChatMessage} mobileSheet />
         </div>
       </div>
     </AppLayout>
   );
 }
+

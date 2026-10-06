@@ -22,6 +22,7 @@ export const ChessBoard = ({
   onPromotionCancel,
   isGameOver,
   isCheckmate,
+  mobileOptimized = true,
 }) => {
   const { settings } = useSettings();
   const theme = BOARD_THEMES[settings.boardTheme] || BOARD_THEMES.midnight;
@@ -32,7 +33,7 @@ export const ChessBoard = ({
   const captureTargets = settings.showLegalMoves ? legalMoves.filter((m) => m.isCapture).map((m) => m.to) : [];
 
   return (
-    <div className="flex flex-col items-center justify-center w-full">
+    <div className="flex flex-col items-center justify-center w-full" data-mobile-optimized={mobileOptimized || undefined}>
       {/* Promotion Modal */}
       <PromotionModal
         isOpen={!!pendingPromotion}
@@ -44,7 +45,7 @@ export const ChessBoard = ({
       {/* Board Container */}
       <div className="relative w-full" data-board-theme={settings.boardTheme} data-coordinates={settings.showCoordinates} style={{ maxWidth: '600px' }}>
         {/* File Labels (Top) */}
-        {settings.showCoordinates && <div className="flex mb-1.5 pl-6 pr-6">
+        {settings.showCoordinates && <div className={clsx('mb-1.5 pl-6 pr-6', mobileOptimized ? 'hidden sm:flex' : 'flex')}>
           {displayFiles.map((file) => (
             <div
               key={file}
@@ -57,7 +58,7 @@ export const ChessBoard = ({
 
         <div className="flex">
           {/* Rank Labels (Left) */}
-          {settings.showCoordinates && <div className="flex flex-col justify-around w-6 mr-1">
+          {settings.showCoordinates && <div className={clsx('flex-col justify-around w-6 mr-1', mobileOptimized ? 'hidden sm:flex' : 'flex')}>
             {displayRanks.map((rank) => (
               <div
                 key={rank}
@@ -71,7 +72,11 @@ export const ChessBoard = ({
 
           {/* The actual chessboard */}
           <div
-            className="flex-1 grid grid-cols-8 rounded-xl overflow-hidden shadow-2xl border-2"
+            data-testid="chessboard"
+            className={clsx(
+              'flex-1 grid grid-cols-8 overflow-hidden shadow-2xl touch-manipulation',
+              mobileOptimized ? 'rounded-lg border sm:rounded-xl sm:border-2' : 'rounded-xl border-2'
+            )}
             style={{ aspectRatio: '1/1', borderColor: theme.border }}
           >
             {displayRanks.map((rank) =>
@@ -144,11 +149,22 @@ export const ChessBoard = ({
 
                     {/* Piece */}
                     {pieceData && (
-                      <div className="absolute inset-0 flex items-center justify-center z-20 select-none">
-                        <div className="w-full h-full p-[8%]">
+                      <div data-piece={`${pieceData.color}${pieceData.type}`} className="absolute inset-0 flex items-center justify-center z-20 select-none">
+                        <div className={clsx('w-full h-full', mobileOptimized ? 'p-[5%] sm:p-[8%]' : 'p-[8%]')}>
                           <Piece type={pieceData.type} color={pieceData.color} />
                         </div>
                       </div>
+                    )}
+
+                    {mobileOptimized && settings.showCoordinates && rank === displayRanks[7] && (
+                      <span className="pointer-events-none absolute bottom-0 right-0.5 z-30 text-[8px] font-black uppercase leading-none text-slate-100/75 drop-shadow sm:hidden">
+                        {file}
+                      </span>
+                    )}
+                    {mobileOptimized && settings.showCoordinates && file === displayFiles[0] && (
+                      <span className="pointer-events-none absolute left-0.5 top-0.5 z-30 text-[8px] font-black leading-none text-slate-100/75 drop-shadow sm:hidden">
+                        {rank}
+                      </span>
                     )}
                   </div>
                 );
@@ -157,7 +173,7 @@ export const ChessBoard = ({
           </div>
 
           {/* Rank Labels (Right) */}
-          {settings.showCoordinates && <div className="flex flex-col justify-around w-6 ml-1">
+          {settings.showCoordinates && <div className={clsx('flex-col justify-around w-6 ml-1', mobileOptimized ? 'hidden sm:flex' : 'flex')}>
             {displayRanks.map((rank) => (
               <div
                 key={rank}
@@ -171,7 +187,7 @@ export const ChessBoard = ({
         </div>
 
         {/* File Labels (Bottom) */}
-        {settings.showCoordinates && <div className="flex mt-1.5 pl-6 pr-6">
+        {settings.showCoordinates && <div className={clsx('mt-1.5 pl-6 pr-6', mobileOptimized ? 'hidden sm:flex' : 'flex')}>
           {displayFiles.map((file) => (
             <div
               key={file}

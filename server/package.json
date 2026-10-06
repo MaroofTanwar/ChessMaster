@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test tests/gameManager.test.mjs tests/elo.test.mjs tests/aiEngine.test.mjs tests/socialManager.test.mjs tests/matchmakingManager.test.mjs tests/analysis.test.mjs tests/settings.test.mjs tests/security.test.mjs tests/httpSecurity.test.mjs",
+    "test": "node --test tests/gameManager.test.mjs tests/elo.test.mjs tests/aiEngine.test.mjs tests/socialManager.test.mjs tests/matchmakingManager.test.mjs tests/analysis.test.mjs tests/settings.test.mjs tests/security.test.mjs tests/httpSecurity.test.mjs tests/platformStats.test.mjs",
     "test:multiplayer": "node tests/liveMultiplayer.mjs",
     "test:browser": "node tests/liveBrowserMultiplayer.mjs",
     "test:quick-match": "node tests/liveQuickMatchBrowser.mjs",

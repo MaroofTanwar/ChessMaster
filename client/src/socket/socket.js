@@ -1,6 +1,15 @@
 import { io } from 'socket.io-client';
 import { getSocketUrl } from '../config/runtime';
 
+export const SOCKET_RECONNECT_OPTIONS = Object.freeze({
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 750,
+  reconnectionDelayMax: 8_000,
+  randomizationFactor: 0.4,
+  timeout: 20_000,
+});
+
 export function createAuthenticatedSocket(firebaseUser) {
   return io(getSocketUrl(), {
     autoConnect: false,
@@ -9,9 +18,6 @@ export function createAuthenticatedSocket(firebaseUser) {
       try { callback({ token: await firebaseUser.getIdToken() }); }
       catch { callback({ token: '' }); }
     },
-    reconnection: true,
-    reconnectionAttempts: 10,
-    reconnectionDelay: 500,
-    reconnectionDelayMax: 5000,
+    ...SOCKET_RECONNECT_OPTIONS,
   });
 }

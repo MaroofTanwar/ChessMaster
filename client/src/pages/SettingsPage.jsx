@@ -30,7 +30,7 @@ export const SettingsPage = () => {
           <div className="mb-2 grid aspect-[2/1] grid-cols-4 overflow-hidden rounded-lg">{Array.from({ length: 8 }, (_, index) => <span key={index} style={{ background: (Math.floor(index / 4) + index % 4) % 2 ? theme.dark : theme.light }} />)}</div>
           <div className="flex items-center justify-between text-sm font-bold text-slate-200"><span>{theme.name}</span>{settings.boardTheme === id && <Check className="h-4 w-4 text-purple-300" />}</div>
         </button>)}</div>
-        <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 p-4"><div className="text-sm font-semibold text-slate-200">Piece style: Standard</div><div className="text-xs text-slate-500">ChessMaster currently includes one genuine SVG piece set.</div></div>
+        <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/40 p-4"><div className="text-sm font-semibold text-slate-200">Piece style: Premium Staunton</div><div className="text-xs text-slate-500">Dimensional ivory and ebony SVG pieces adapt their lighting to the selected board theme.</div></div>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
           <ToggleSwitch label="Show Board Coordinates" description="Display files and ranks in the current orientation." checked={settings.showCoordinates} onChange={toggle('showCoordinates')} />
           <ToggleSwitch label="Show Legal Moves" description="Display move dots and capture rings without changing validation." checked={settings.showLegalMoves} onChange={toggle('showLegalMoves')} />

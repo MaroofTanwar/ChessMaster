@@ -52,7 +52,17 @@ try {
   const chess = new Chess(); const moves = ['e4', 'e5', 'Nf3', 'Nc6'].map((san) => { const move = chess.move(san); return { from: move.from, to: move.to, san: move.san, promotion: move.promotion || null }; });
   await adminDb.collection('games').doc(gameId).set({ gameId, roomId: gameId, whitePlayerUid: owner.uid, blackPlayerUid: opponent.uid, whitePlayerName: owner.username, blackPlayerName: opponent.username, participantUids: [owner.uid, opponent.uid], moves, moveCount: moves.length, initialFen: new Chess().fen(), finalFen: chess.fen(), winnerUid: owner.uid, result: '1-0', reason: 'resignation', status: 'finished', gameMode: 'casual', ratingProcessed: false, timeControl: { initialSeconds: 600, incrementSeconds: 0 }, startedAt: FieldValue.serverTimestamp(), endedAt: FieldValue.serverTimestamp() });
 
-  await page.goto('http://localhost:5173/settings'); await page.getByTestId('theme-ocean').click();
+  await page.goto('http://localhost:5173/settings');
+  for (const theme of ['midnight', 'classic', 'ocean', 'forest', 'royal']) {
+    await page.getByTestId(`theme-${theme}`).click();
+    await page.getByText('Saved', { exact: true }).waitFor();
+    await page.goto('http://localhost:5173/play');
+    await assertBoard(page, theme, 'true');
+    if (await page.locator('[data-piece-art="premium-staunton"]').first().getAttribute('data-piece-theme') !== theme) throw new Error(`${theme} piece treatment was not applied.`);
+    await page.goto('http://localhost:5173/settings');
+  }
+  await page.getByTestId('theme-ocean').click();
+  report('All five board themes apply their matching premium piece treatment');
   await cycleSwitch(page, 'Show Board Coordinates', true, false, true); await page.getByRole('switch', { name: 'Show Board Coordinates' }).click(); await assertSwitchGeometry(page, 'Show Board Coordinates', false);
   await cycleSwitch(page, 'Auto Queen', false, true, false);
   await cycleSwitch(page, 'Master Sound', true, false, true);
@@ -80,6 +90,12 @@ try {
   await page.goto('http://localhost:5173/play'); await assertBoard(page);
   await page.locator('[data-square="e2"]').click(); if (await page.locator('[data-legal-target="true"]').count()) throw new Error('Legal indicators remained visible.');
   await page.locator('[data-square="e4"]').click(); if (await page.locator('[data-last-move="true"]').count()) throw new Error('Last move highlight remained visible.');
+  await page.locator('[data-square="d7"]').click(); await page.locator('[data-square="d5"]').click();
+  await page.locator('[data-square="e4"]').click(); await page.locator('[data-square="d5"]').click();
+  const localCapturedPawn = page.locator('[data-captured-piece="bp"]').first();
+  await localCapturedPawn.waitFor();
+  if (await localCapturedPawn.locator('[data-piece-art="premium-staunton"][data-piece-theme="ocean"]').count() !== 1) throw new Error('Local captured pawn did not use the Ocean premium renderer.');
+  if (await page.locator('[data-material-advantage="1"]').count() !== 1) throw new Error('Local material advantage did not update after capture.');
   report('Logout/login persistence and Local Chess visual preferences');
 
   await page.goto('http://localhost:5173/ai'); await page.getByRole('button', { name: /beginner/i }).click(); await page.getByRole('button', { name: 'Start Game' }).click(); await assertBoard(page);
@@ -91,7 +107,8 @@ try {
 
   const opponentPage = await login(opponent); await page.goto('http://localhost:5173/multiplayer'); await page.getByRole('button', { name: 'Create Game' }).click();
   const roomText = await page.getByText(/^CHESS-/).textContent(); multiplayerGameId = `${roomText}-1`; await opponentPage.goto('http://localhost:5173/multiplayer'); await opponentPage.getByPlaceholder('CHESS-7F29K').fill(roomText); await opponentPage.getByRole('button', { name: 'Join Game' }).click();
-  await assertBoard(page); await page.locator('[data-square="e2"]').click(); await page.locator('[data-square="e4"]').click(); await opponentPage.locator('[data-square="e7"]').click(); await opponentPage.locator('[data-square="e5"]').click();
+  await assertBoard(page); await page.locator('[data-square="e2"]').click(); await page.locator('[data-square="e4"]').click(); await opponentPage.locator('[data-square="d7"]').click(); await opponentPage.locator('[data-square="d5"]').click(); await page.locator('[data-square="e4"]').click(); await page.locator('[data-square="d5"]').click();
+  if (await page.locator('[data-captured-piece="bp"] [data-piece-art="premium-staunton"]').count() !== 1) throw new Error('Multiplayer captured pawn did not use the shared premium renderer.');
   await page.getByTitle('Resign Match').click(); await page.getByText('Resign this game?', { exact: true }).waitFor(); await page.getByRole('button', { name: 'Resign Game' }).click(); await page.getByText('is Victorious!', { exact: false }).waitFor();
   report('Multiplayer synchronization and confirm-resign remain server-authoritative');
 

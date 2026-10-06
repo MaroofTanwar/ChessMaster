@@ -1,10 +1,8 @@
 import React from 'react';
 import Avatar from '../ui/Avatar';
-import Piece from './Piece';
+import CapturedMaterialDisplay from './CapturedMaterialDisplay';
 import { Clock } from 'lucide-react';
 import { clsx } from 'clsx';
-
-const PIECE_VALUES = { q: 9, r: 5, b: 3, n: 3, p: 1 };
 
 export const PlayerInfoBar = ({
   player = { name: 'Player', rating: 1200, avatar: null, title: '' },
@@ -17,18 +15,16 @@ export const PlayerInfoBar = ({
   isGameOver = false,
   online,
   className = '',
+  compactOnMobile = false,
 }) => {
   const isWhite = color === 'w';
 
-  // Sort captured pieces by descending piece value (Q, R, B, N, P)
-  const sortedCaptures = [...capturedPieces].sort(
-    (a, b) => (PIECE_VALUES[b] || 0) - (PIECE_VALUES[a] || 0)
-  );
-
   return (
     <div
+      data-testid="player-info-bar"
       className={clsx(
-        'flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-2xl border transition-all duration-200 select-none',
+        'flex items-center justify-between border transition-all duration-200 select-none',
+        compactOnMobile ? 'gap-2 px-2 py-1.5 rounded-xl sm:gap-3 sm:px-3.5 sm:py-2.5 sm:rounded-2xl' : 'gap-3 px-3.5 py-2.5 rounded-2xl',
         isActiveTurn && !isGameOver
           ? 'bg-slate-900/90 border-cyan-500/40 shadow-lg shadow-cyan-950/30 ring-1 ring-cyan-500/30'
           : 'bg-slate-950/60 border-white/5',
@@ -36,7 +32,7 @@ export const PlayerInfoBar = ({
       )}
     >
       {/* Left: Player Profile */}
-      <div className="flex items-center gap-2.5 min-w-0">
+      <div data-testid="player-profile" className={clsx('flex items-center min-w-0', compactOnMobile ? 'gap-2 sm:gap-2.5' : 'gap-2.5')}>
         <div className="relative">
           <Avatar
             src={player.avatar}
@@ -78,25 +74,19 @@ export const PlayerInfoBar = ({
       </div>
 
       {/* Middle: Captured Pieces & Advantage */}
-      <div className="hidden sm:flex items-center gap-1.5 overflow-x-auto max-w-[200px] px-2 py-0.5">
-        <div className="flex items-center gap-0.5">
-          {sortedCaptures.map((p, i) => (
-            <div key={i} className="w-4 h-4 flex items-center justify-center shrink-0">
-              <Piece type={p} color={isWhite ? 'b' : 'w'} className="w-4 h-4" />
-            </div>
-          ))}
-        </div>
-        {materialAdvantage > 0 && (
-          <span className="text-[11px] font-black text-cyan-300 bg-cyan-950/60 px-1.5 py-0.5 rounded border border-cyan-500/30 shrink-0 font-mono">
-            +{materialAdvantage}
-          </span>
-        )}
-      </div>
+      <CapturedMaterialDisplay
+        pieces={capturedPieces}
+        pieceColor={isWhite ? 'b' : 'w'}
+        advantage={materialAdvantage}
+        className="max-w-[30vw] flex-1 justify-center px-0.5 sm:max-w-[220px] sm:px-2"
+      />
 
       {/* Right: Digital Tournament Clock */}
       <div
+        data-testid="player-clock"
         className={clsx(
-          'flex items-center gap-1.5 px-3 py-1 rounded-xl border font-mono font-black text-sm sm:text-base tracking-wider transition-all duration-150 shrink-0',
+          'flex items-center gap-1.5 py-1 rounded-xl border font-mono font-black text-sm sm:text-base tracking-wider transition-all duration-150 shrink-0',
+          compactOnMobile ? 'px-2 sm:px-3' : 'px-3',
           isLowTime
             ? 'bg-rose-500/20 border-rose-500/60 text-rose-300 animate-pulse shadow-[0_0_12px_rgba(244,63,94,0.4)]'
             : isActiveTurn && !isGameOver

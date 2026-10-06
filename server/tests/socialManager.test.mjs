@@ -25,8 +25,10 @@ function fixture() {
 test('presence stays online until every socket for a UID disconnects', () => {
   const f = fixture(); const a1 = f.makeSocket('a1', 'a', 'Alpha'); const a2 = f.makeSocket('a2', 'a', 'Alpha');
   f.manager.connect(a1); f.manager.connect(a2); f.manager.disconnect(a1);
+  assert.equal(f.manager.onlineUserCount(), 1);
   assert.equal(f.manager.presence(['a']).a, true);
   f.manager.disconnect(a2); assert.equal(f.manager.presence(['a']).a, false);
+  assert.equal(f.manager.onlineUserCount(), 0);
   f.manager.close();
 });
 

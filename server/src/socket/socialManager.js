@@ -34,6 +34,8 @@ export class SocialManager {
     if (!ids.size) { this.connections.delete(uid); void this.broadcastPresence(uid, false); }
   }
 
+  onlineUserCount() { return this.connections.size; }
+
   async broadcastPresence(uid, online) {
     try {
       const snapshot = await this.db.collection('friendships').where('memberUids', 'array-contains', uid).limit(100).get();

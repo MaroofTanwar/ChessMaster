@@ -1,6 +1,7 @@
 import { Chess } from 'chess.js';
+import { AI_SEARCH_SETTINGS, AI_DIFFICULTY_ORDER } from './aiConfig.js';
 const VALUES = { p: 100, n: 320, b: 330, r: 500, q: 900, k: 0 };
-export const SETTINGS = { Beginner: { depth: 1, variety: 5 }, Easy: { depth: 1, variety: 3 }, Medium: { depth: 2, variety: 2 }, Hard: { depth: 3, variety: 1 }, Expert: { depth: 4, variety: 1 } };
+export const SETTINGS = Object.freeze(Object.fromEntries(AI_DIFFICULTY_ORDER.map((name) => [name, Object.freeze({ depth: AI_SEARCH_SETTINGS[name].fallbackDepth, variety: AI_SEARCH_SETTINGS[name].multiPv })])));
 const moveData = (move) => ({ from: move.from, to: move.to, promotion: move.promotion || 'q' });
 const evaluation = (game, color) => { if (game.isCheckmate()) return game.turn() === color ? -100000 : 100000; if (game.isDraw()) return 0; let score = 0; for (const row of game.board()) for (const piece of row) if (piece) score += (piece.color === color ? 1 : -1) * VALUES[piece.type]; return score; };
 const moves = (game) => game.moves({ verbose: true }).sort((a, b) => Number(Boolean(b.captured)) - Number(Boolean(a.captured)));

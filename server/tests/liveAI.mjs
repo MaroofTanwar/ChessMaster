@@ -13,9 +13,11 @@ if (process.env.CHESSMASTER_LIVE_AI_TEST !== '1') process.exit(1);
 const apiKey = process.env.VITE_FIREBASE_API_KEY;
 const account = { email: `chessmaster-ai-${randomUUID()}@example.com`, password: `${randomUUID()}Aa1!`, name: 'AI Tester' };
 let uid, gameId;
+const port = Number(process.env.AI_TEST_PORT || 5000);
+const apiBaseUrl = `http://localhost:${port}`;
 const server = createServer(app);
 const { io, manager } = createSocketServer(server);
-await new Promise((resolve, reject) => { server.once('error', reject); server.listen(5000, 'localhost', resolve); });
+await new Promise((resolve, reject) => { server.once('error', reject); server.listen(port, 'localhost', resolve); });
 const browser = await playwright.chromium.launch({ channel: 'msedge', headless: true });
 const page = await browser.newPage();
 page.setDefaultTimeout(20000);
@@ -27,7 +29,7 @@ try {
   const signup = await response.json(); uid = signup.localId;
   const afterE4 = new Chess(); afterE4.move('e4');
   for (const difficulty of ['Beginner', 'Easy', 'Medium', 'Hard', 'Expert']) {
-    const aiResponse = await fetch('http://localhost:5000/api/ai-move', { method: 'POST', headers: { 'content-type': 'application/json', Authorization: `Bearer ${signup.idToken}` }, body: JSON.stringify({ fen: afterE4.fen(), difficulty }) });
+    const aiResponse = await fetch(`${apiBaseUrl}/api/ai-move`, { method: 'POST', headers: { 'content-type': 'application/json', Authorization: `Bearer ${signup.idToken}` }, body: JSON.stringify({ fen: afterE4.fen(), difficulty, requestId: `live_${difficulty.toLowerCase()}_${randomUUID()}` }) });
     const payload = await aiResponse.json(); if (!aiResponse.ok) throw new Error(`${difficulty} /api/ai-move failed: ${payload.error}`);
     const validation = new Chess(afterE4.fen()).move(payload.move); if (validation.color !== 'b') throw new Error(`${difficulty} returned an invalid move.`);
   }
@@ -37,11 +39,23 @@ try {
   await page.getByRole('button', { name: 'Sign In', exact: true }).click(); await page.waitForURL('**/dashboard');
   const before = await adminDb.collection('users').doc(uid).get();
 
+  let simulatedColdStartFailures = 0;
+  await page.route('**/api/health', async (route) => {
+    if (simulatedColdStartFailures === 0) {
+      simulatedColdStartFailures += 1;
+      await route.abort('connectionrefused');
+      return;
+    }
+    await route.continue();
+  });
   await page.goto('http://localhost:5173/ai');
+  await page.getByText('Connecting to ChessMaster AI…', { exact: true }).waitFor();
   await page.getByRole('button', { name: /beginner/i }).click();
   await page.getByRole('button', { name: /black/i }).click();
   await page.getByRole('button', { name: 'Start Game' }).click();
   await page.getByText('You play Black', { exact: false }).waitFor();
+  if (simulatedColdStartFailures !== 1) throw new Error('The production-style cold-start failure was not exercised exactly once.');
+  report('First health failure shows wake-up state and recovers without a raw network error');
   await page.getByText('AI is thinking…', { exact: true }).waitFor();
   try { await page.getByText('Move 1', { exact: false }).waitFor(); }
   catch (error) { console.log(`[AI PAGE] ${await page.locator('body').innerText()}`); throw error; }

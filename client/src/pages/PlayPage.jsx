@@ -180,7 +180,7 @@ export const PlayPage = () => {
   }, [resetGame, resetClocks, flipBoard, addToast]);
 
   return (
-    <AppLayout>
+    <AppLayout mobileGame>
       {/* Game Over Modal */}
       <GameOverModal
         isOpen={showGameOverModal}
@@ -204,17 +204,17 @@ export const PlayPage = () => {
         }}
       />
 
-      <div className="flex flex-col gap-5 max-w-7xl mx-auto w-full">
+      <div className="flex flex-col gap-2 sm:gap-5 max-w-7xl mx-auto w-full">
         {/* Top Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-2 px-2 sm:px-0 sm:gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-100">
+              <h1 className="text-lg sm:text-3xl font-black tracking-tight text-slate-100">
                 Chess Arena
               </h1>
               <Badge variant="rose" icon={Swords}>Tournament</Badge>
             </div>
-            <p className="text-xs sm:text-sm text-slate-400 mt-0.5">
+            <p className="hidden sm:block text-sm text-slate-400 mt-0.5">
               {opening ? `${opening.name} (${opening.eco})` : 'Professional pass-and-play match arena.'}
             </p>
           </div>
@@ -250,9 +250,9 @@ export const PlayPage = () => {
         </div>
 
         {/* Main Tournament Grid: Board (Left/Center) + Sidebar (Right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-3 sm:gap-6 items-start">
           {/* Board Column */}
-          <Card className="p-3.5 sm:p-5 border-white/10 flex flex-col gap-3 shadow-2xl">
+          <Card className="p-1.5 sm:p-5 border-white/10 flex flex-col gap-1.5 sm:gap-3 shadow-2xl rounded-xl sm:rounded-2xl">
             {/* Top Player Info Bar */}
             <PlayerInfoBar
               player={topPlayer}
@@ -267,10 +267,11 @@ export const PlayPage = () => {
                   : materialAdvantage < 0 ? Math.abs(materialAdvantage) : 0
               }
               isGameOver={isGameOver}
+              compactOnMobile
             />
 
             {/* Chessboard Component (Hero Focus) */}
-            <div className="flex items-center justify-center w-full py-1">
+            <div className="flex items-center justify-center w-full">
               <ChessBoard
                 board={board}
                 selectedSquare={selectedSquare}
@@ -285,6 +286,7 @@ export const PlayPage = () => {
                 onPromotionCancel={cancelPromotion}
                 isGameOver={isGameOver}
                 isCheckmate={isCheckmate}
+                mobileOptimized
               />
             </div>
 
@@ -302,6 +304,7 @@ export const PlayPage = () => {
                   : materialAdvantage < 0 ? Math.abs(materialAdvantage) : 0
               }
               isGameOver={isGameOver}
+              compactOnMobile
             />
           </Card>
 
@@ -333,6 +336,7 @@ export const PlayPage = () => {
               onFlipBoard={flipBoard}
               onToggleSound={toggleMute}
               onOpenTimeControl={() => setShowTimeControlModal(true)}
+              mobileSheet
             />
           </div>
         </div>

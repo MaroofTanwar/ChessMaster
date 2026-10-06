@@ -1,13 +1,20 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crown, Swords, Bot, Trophy, Zap, Sparkles, ChevronRight } from 'lucide-react';
+import { Crown, Swords, Bot, Trophy, Zap, Sparkles, ChevronRight, Clock3 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import Navbar from '../components/layout/Navbar';
+import LiveMatchPreviewBoard from '../components/chess/LiveMatchPreviewBoard';
+import PlatformStatsSection from '../components/landing/PlatformStatsSection';
 
 export const LandingPage = () => {
+  const [previewClockSeconds, setPreviewClockSeconds] = React.useState(225);
+  const previewClock = `${String(Math.floor(previewClockSeconds / 60)).padStart(2, '0')}:${String(
+    previewClockSeconds % 60,
+  ).padStart(2, '0')}`;
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -98,35 +105,13 @@ export const LandingPage = () => {
                 </div>
                 <div className="flex items-center gap-4">
                   <Badge variant="purple" icon={Trophy}>Master Rated</Badge>
-                  <span className="font-mono text-slate-300">03:45 ⏱️</span>
+                  <span className="flex items-center gap-1.5 font-mono text-slate-300" data-preview-clock>
+                    {previewClock} <Clock3 className="h-4 w-4" aria-hidden="true" />
+                  </span>
                 </div>
               </div>
 
-              {/* Simplified Dark Stylized Board Preview */}
-              <div className="w-full max-w-md aspect-square rounded-xl overflow-hidden grid grid-cols-8 border border-white/10 shadow-2xl">
-                {Array.from({ length: 64 }).map((_, i) => {
-                  const row = Math.floor(i / 8);
-                  const col = i % 8;
-                  const isDark = (row + col) % 2 === 1;
-                  return (
-                    <div
-                      key={i}
-                      className={`flex items-center justify-center font-bold text-lg ${
-                        isDark ? 'bg-slate-900/90 text-purple-400/80' : 'bg-slate-800/60 text-slate-300/80'
-                      } ${i === 27 ? '!bg-purple-600/40 text-purple-200 ring-2 ring-purple-500' : ''} ${
-                        i === 35 ? '!bg-cyan-600/40 text-cyan-200 ring-2 ring-cyan-400' : ''
-                      }`}
-                    >
-                      {i === 3 && '♛'}
-                      {i === 4 && '♚'}
-                      {i === 27 && '♞'}
-                      {i === 35 && '♟'}
-                      {i === 59 && '♕'}
-                      {i === 60 && '♔'}
-                    </div>
-                  );
-                })}
-              </div>
+              <LiveMatchPreviewBoard onClockChange={setPreviewClockSeconds} />
             </div>
           </motion.div>
         </div>
@@ -206,27 +191,7 @@ export const LandingPage = () => {
         </motion.div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-slate-950/60 border-y border-white/5 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-          <div>
-            <div className="text-4xl sm:text-5xl font-black text-gradient-purple-cyan mb-2">100K+</div>
-            <div className="text-xs uppercase tracking-widest font-bold text-slate-400">Active Players</div>
-          </div>
-          <div>
-            <div className="text-4xl sm:text-5xl font-black text-gradient-purple-cyan mb-2">2.5M</div>
-            <div className="text-xs uppercase tracking-widest font-bold text-slate-400">Games Completed</div>
-          </div>
-          <div>
-            <div className="text-4xl sm:text-5xl font-black text-gradient-purple-cyan mb-2">&lt; 15ms</div>
-            <div className="text-xs uppercase tracking-widest font-bold text-slate-400">Server Latency</div>
-          </div>
-          <div>
-            <div className="text-4xl sm:text-5xl font-black text-gradient-gold mb-2">3200</div>
-            <div className="text-xs uppercase tracking-widest font-bold text-slate-400">Max Engine ELO</div>
-          </div>
-        </div>
-      </section>
+      <PlatformStatsSection />
 
       {/* CTA Section */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full text-center relative">

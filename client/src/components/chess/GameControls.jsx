@@ -50,7 +50,7 @@ export const GameControls = ({
 
     if (isCheckmate) {
       return {
-        text: `♚ Checkmate! ${winnerLabel} Wins!`,
+        text: `Checkmate! ${winnerLabel} Wins!`,
         cls: 'text-amber-300 bg-amber-500/15 border-amber-400/40 font-black shadow-[0_0_12px_rgba(251,191,36,0.3)] animate-pulse',
       };
     }
@@ -80,7 +80,7 @@ export const GameControls = ({
     }
     if (isCheck) {
       return {
-        text: '♚ Check!',
+        text: 'Check!',
         cls: 'text-rose-400 bg-rose-500/15 border-rose-500/30 font-bold animate-pulse',
       };
     }

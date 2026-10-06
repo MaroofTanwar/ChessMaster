@@ -85,9 +85,9 @@ export default function GameReplayPage() {
   if (loading) return <AppLayout><Card className="p-12"><LoadingSpinner label="Loading replay" /></Card></AppLayout>;
   if (error || !game) return <AppLayout><ErrorState title="Replay unavailable" description={error} /></AppLayout>;
 
-  return <AppLayout>
-    <div className="flex flex-col gap-5 max-w-7xl mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+  return <AppLayout mobileGame>
+    <div className="flex flex-col gap-2 sm:gap-5 max-w-7xl mx-auto">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-2 sm:px-0 sm:gap-3">
         <div>
           <Button
             type="button"
@@ -99,13 +99,13 @@ export default function GameReplayPage() {
           >
             Back to Game History
           </Button>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-100">Game Replay</h1>
+          <h1 className="text-xl sm:text-3xl font-black text-slate-100">Game Replay</h1>
           <p className="text-xs text-slate-400 mt-1">Room {game.roomId || 'Unavailable'} · Move {index} of {replay.moves.length}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2"><Button icon={BrainCircuit} disabled={!!replay.error || analyzing || !!analysis} isLoading={analyzing} onClick={analysisState.start}>{analysis ? 'Analysis Ready' : 'Analyze Game'}</Button>{game.gameType === 'ai' && <Badge variant="purple">AI · {game.aiDifficulty || 'Unknown'}</Badge>}<Badge variant={game.winnerUid ? 'gold' : 'cyan'}>{winnerName ? `${winnerName} won` : 'Draw'}</Badge></div>
       </div>
 
-      <Card className="p-4 border-white/10">
+      <Card className="mx-2 p-3 sm:mx-0 sm:p-4 border-white/10">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"><span className="font-bold text-slate-100">{game.whitePlayerName || 'White'} vs {game.blackPlayerName || 'Black'}</span><span className="text-slate-400">{label(game.reason) || 'Completed'}</span><span className="inline-flex items-center gap-1 text-slate-400"><Clock className="w-4 h-4" />{Math.round(initial / 60)}+{increment}</span><span className="text-slate-400">{duration(game.durationSeconds)}</span>{endedAt && !Number.isNaN(endedAt.getTime()) && <span className="inline-flex items-center gap-1 text-slate-500"><CalendarDays className="w-4 h-4" />{endedAt.toLocaleString()}</span>}</div>
       </Card>
 
@@ -113,11 +113,11 @@ export default function GameReplayPage() {
       {analyzing && <Card className="p-4 border-purple-500/20"><div className="flex items-center justify-between gap-3"><div><div className="font-bold text-slate-100">Analyzing game…</div><div className="text-xs text-slate-400">{analysisState.progress.completed} / {analysisState.progress.total || replay.positions.length} positions</div></div><Button size="sm" variant="ghost" icon={X} onClick={analysisState.cancel}>Cancel</Button></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-800"><div className="h-full bg-gradient-to-r from-purple-500 to-cyan-400 transition-[width]" style={{ width: `${analysisState.progress.total ? analysisState.progress.completed / analysisState.progress.total * 100 : 0}%` }} /></div></Card>}
       {analysisState.error && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200"><span>{analysisState.error}</span><Button size="sm" variant="secondary" onClick={analysisState.start}>Retry</Button></div>}
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
-        <Card className="p-3.5 sm:p-5 border-white/10">
-          <div className="flex items-stretch gap-2">{analysis && <EvaluationBar evaluation={evaluation} />}<div className="min-w-0 flex-1"><ChessBoard board={chess.board()} selectedSquare={null} legalMoves={[]} lastMove={position?.lastMove} inCheckSquare={null} boardOrientation={orientation} pendingPromotion={null} turn={chess.turn()} onSquareClick={() => {}} onPromotionSelect={() => {}} onPromotionCancel={() => {}} isGameOver isCheckmate={false} /></div></div>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-3 sm:gap-6 items-start">
+        <Card className="p-1.5 sm:p-5 border-white/10 rounded-xl sm:rounded-2xl">
+          <div className="flex items-stretch gap-2">{analysis && <div className="hidden sm:flex"><EvaluationBar evaluation={evaluation} /></div>}<div className="relative min-w-0 flex-1"><ChessBoard board={chess.board()} selectedSquare={null} legalMoves={[]} lastMove={position?.lastMove} inCheckSquare={null} boardOrientation={orientation} pendingPromotion={null} turn={chess.turn()} onSquareClick={() => {}} onPromotionSelect={() => {}} onPromotionCancel={() => {}} isGameOver isCheckmate={false} />{analysis && <div className="absolute inset-y-1 left-1 z-30 sm:hidden"><EvaluationBar evaluation={evaluation} mobileOverlay /></div>}</div></div>
         </Card>
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3 px-2 sm:gap-4 sm:px-0">
           <Card className="p-4 border-white/10">
             <div className="flex items-center justify-between mb-3"><div className="flex items-center gap-2 font-bold text-slate-100"><Swords className="w-4 h-4 text-purple-300" />Moves</div><Button size="sm" variant="secondary" icon={FlipHorizontal} onClick={() => setOrientation((value) => value === 'white' ? 'black' : 'white')}>Flip</Button></div>
             <div className="h-64 overflow-y-auto"><MoveHistory history={replay.moves} annotations={analysis?.moves} currentMoveIndex={index - 1} onMoveSelect={(moveIndex) => { setPlaying(false); setIndex(moveIndex + 1); }} /></div>
