@@ -14,6 +14,13 @@ if (process.env.CHESSMASTER_LIVE_MOBILE_TEST !== '1') throw new Error('Set CHESS
 
 const WIDTHS = [320, 360, 375, 390, 412, 430];
 const HEIGHT = 932;
+const STABILITY_MOVES = [
+  ['e2', 'e4'], ['e7', 'e5'], ['g1', 'f3'], ['b8', 'c6'],
+  ['f1', 'b5'], ['a7', 'a6'], ['b5', 'a4'], ['g8', 'f6'],
+  ['e1', 'g1'], ['f8', 'e7'], ['f1', 'e1'], ['b7', 'b5'],
+  ['a4', 'b3'], ['d7', 'd6'], ['c2', 'c3'], ['e8', 'g8'],
+  ['h2', 'h3'], ['c6', 'b8'], ['d2', 'd4'], ['b8', 'd7'],
+];
 const apiKey = process.env.VITE_FIREBASE_API_KEY;
 const gameId = `MOBILE-${randomUUID()}`;
 const accounts = [];
@@ -96,6 +103,22 @@ const verifyBoardAtWidths = async (page, name, { players = false } = {}) => {
   pass(`${name} mobile geometry`);
 };
 
+const readPageScroll = (page) => page.locator('main').evaluate((main) => main.scrollTop);
+const resetPageScroll = async (page) => {
+  await page.locator('main').evaluate((main) => { main.scrollTop = 0; });
+  await page.waitForTimeout(80);
+  return readPageScroll(page);
+};
+const expectStablePageScroll = async (page, expected, label) => {
+  await page.waitForTimeout(220);
+  const actual = await readPageScroll(page);
+  if (Math.abs(actual - expected) > 1) throw new Error(`${label}: page moved from ${expected}px to ${actual}px.`);
+};
+const playTapMove = async (page, from, to) => {
+  await page.locator(`[data-square="${from}"]`).click();
+  await page.locator(`[data-square="${to}"]`).click();
+};
+
 try {
   const owner = await signup('MobileOwner');
   const opponent = await signup('MobileOpponent');
@@ -103,8 +126,8 @@ try {
   const opponentPage = await login(opponent);
 
   const fixtureChess = new Chess();
-  const fixtureMoves = ['e4', 'e5', 'Nf3', 'Nc6'].map((san) => {
-    const move = fixtureChess.move(san);
+  const fixtureMoves = STABILITY_MOVES.map(([from, to]) => {
+    const move = fixtureChess.move({ from, to });
     return { from: move.from, to: move.to, san: move.san, promotion: move.promotion || null };
   });
   await adminDb.collection('games').doc(gameId).set({
@@ -144,19 +167,43 @@ try {
   if (await movesTab.getAttribute('aria-selected') !== 'true') throw new Error('Moves is not the default mobile tab.');
   await page.getByRole('tab', { name: 'Game Info' }).click();
   await page.getByRole('tab', { name: 'Chat' }).click();
-  await page.getByTitle('New Game').scrollIntoViewIfNeeded();
+  await page.locator('main').evaluate((main) => { main.scrollTop = main.scrollHeight; });
+  await page.waitForTimeout(100);
   const lastControl = await page.getByTitle('New Game').boundingBox();
   const mobileNav = await page.getByTestId('mobile-game-navigation').boundingBox();
   if (!lastControl || !mobileNav || lastControl.y + lastControl.height > mobileNav.y + 1) throw new Error(`Bottom navigation covers the mobile game controls: control=${JSON.stringify(lastControl)} nav=${JSON.stringify(mobileNav)}.`);
   pass('Moves/Game Info/Chat sheet clearance');
 
+  await page.goto('http://localhost:5173/play');
+  await page.setViewportSize({ width: 390, height: HEIGHT });
+  await page.getByTestId('chessboard').waitFor();
+  const localScroll = await resetPageScroll(page);
+  for (let index = 0; index < STABILITY_MOVES.length; index += 1) {
+    const [from, to] = STABILITY_MOVES[index];
+    await playTapMove(page, from, to);
+    await page.getByRole('tab', { name: `Moves (${index + 1})` }).waitFor();
+    await expectStablePageScroll(page, localScroll, `Local move ${index + 1}`);
+  }
+  const moveFeedState = await page.getByTestId('move-history-scroll').evaluate((feed) => ({
+    scrollTop: feed.scrollTop,
+    scrollHeight: feed.scrollHeight,
+    clientHeight: feed.clientHeight,
+  }));
+  if (moveFeedState.scrollHeight <= moveFeedState.clientHeight || moveFeedState.scrollTop <= 0) {
+    throw new Error(`Moves history did not scroll independently: ${JSON.stringify(moveFeedState)}.`);
+  }
+  pass('20-ply Local game keeps page stable and scrolls Moves independently');
+
   await page.goto('http://localhost:5173/ai');
   await page.getByRole('button', { name: /beginner/i }).click();
   await page.getByRole('button', { name: 'Start Game' }).click();
   await verifyBoardAtWidths(page, 'AI Bot', { players: true });
+  await page.setViewportSize({ width: 390, height: HEIGHT });
+  const aiScroll = await resetPageScroll(page);
   await page.locator('[data-square="e2"]').click();
   await page.locator('[data-square="e4"]').click();
   await page.getByRole('tab', { name: 'Moves (2)' }).waitFor();
+  await expectStablePageScroll(page, aiScroll, 'AI human + engine response');
   pass('AI mobile move response');
 
   await page.goto('http://localhost:5173/multiplayer');
@@ -167,18 +214,33 @@ try {
   await opponentPage.getByPlaceholder('CHESS-7F29K').fill(roomId);
   await opponentPage.getByRole('button', { name: 'Join Game' }).click();
   await verifyBoardAtWidths(page, 'Multiplayer / Quick Match board', { players: true });
+  await page.setViewportSize({ width: 390, height: HEIGHT });
+  await opponentPage.setViewportSize({ width: 390, height: HEIGHT });
+  const multiplayerOwnerScroll = await resetPageScroll(page);
+  const multiplayerOpponentScroll = await resetPageScroll(opponentPage);
   await page.locator('[data-square="e2"]').click();
   await page.locator('[data-square="e4"]').click();
+  await opponentPage.locator('[data-square="e4"] [data-piece="wp"]').waitFor();
+  await expectStablePageScroll(page, multiplayerOwnerScroll, 'Multiplayer local move');
+  await expectStablePageScroll(opponentPage, multiplayerOpponentScroll, 'Multiplayer opponent move');
   await opponentPage.locator('[data-square="e7"]').click();
   await opponentPage.locator('[data-square="e5"]').click();
+  await page.locator('[data-square="e5"] [data-piece="bp"]').waitFor();
+  await expectStablePageScroll(page, multiplayerOwnerScroll, 'Multiplayer received response');
+  await expectStablePageScroll(opponentPage, multiplayerOpponentScroll, 'Multiplayer sent response');
   pass('Multiplayer synchronization after responsive layout');
 
   await page.goto(`http://localhost:5173/history/${gameId}`);
   await verifyBoardAtWidths(page, 'Game Replay');
-  await page.getByRole('button', { name: 'Next move' }).click();
-  if (await page.locator('[data-square="e4"] [data-piece="wp"]').count() !== 1) throw new Error('Replay Next did not reconstruct e4.');
+  await page.setViewportSize({ width: 390, height: HEIGHT });
+  const replayScroll = await resetPageScroll(page);
+  for (let index = 0; index < STABILITY_MOVES.length; index += 1) {
+    await page.getByRole('button', { name: 'Next move' }).click();
+    await expectStablePageScroll(page, replayScroll, `Replay move ${index + 1}`);
+  }
+  if (await page.locator('[data-square="d7"] [data-piece="bn"]').count() !== 1) throw new Error('Replay did not reconstruct the final fixture position.');
   await page.getByRole('button', { name: 'Previous move' }).click();
-  if (await page.locator('[data-square="e2"] [data-piece="wp"]').count() !== 1) throw new Error('Replay Previous did not restore the start position.');
+  await expectStablePageScroll(page, replayScroll, 'Replay previous move');
   pass('Replay navigation after responsive layout');
 
   await page.getByRole('button', { name: 'Analyze Game' }).click();
@@ -186,6 +248,10 @@ try {
   await page.getByRole('img', { name: 'Engine evaluation graph' }).waitFor();
   await verifyBoardAtWidths(page, 'Game Analysis');
   if (!await page.getByLabel(/Evaluation/).nth(1).isVisible()) throw new Error('Mobile evaluation bar is not visible.');
+  await page.setViewportSize({ width: 390, height: HEIGHT });
+  const analysisScroll = await resetPageScroll(page);
+  await page.locator('[data-move-index="15"]').evaluate((move) => move.click());
+  await expectStablePageScroll(page, analysisScroll, 'Analysis move selection');
   pass('Analysis evaluation bar, graph, and cached result');
 
   await page.setViewportSize({ width: 1280, height: 800 });

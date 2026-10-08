@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useToast } from '../../context/ToastContext';
+import { scrollContainerToEnd } from '../../utils/scrollWithinContainer';
 
 export const GameSidebar = ({
   history = [],
@@ -64,12 +65,12 @@ export const GameSidebar = ({
     { id: 1, sender: 'System', text: 'Match started. Good luck!', time: '12:00' },
   ]);
   const [chatInput, setChatInput] = useState('');
-  const chatEndRef = useRef(null);
+  const chatScrollRef = useRef(null);
   const isServerChat = Array.isArray(serverChatMessages) && typeof onSendChatMessage === 'function';
   const chatMessages = isServerChat ? serverChatMessages : localChatMessages;
 
   useEffect(() => {
-    if (activeTab === 'chat') chatEndRef.current?.scrollIntoView?.({ behavior: 'smooth' });
+    if (activeTab === 'chat') scrollContainerToEnd(chatScrollRef.current, 'smooth');
   }, [activeTab, chatMessages]);
 
   const handleCopyPgn = () => {
@@ -233,11 +234,15 @@ export const GameSidebar = ({
       </div>
 
       {/* Tab Contents */}
-      <div className={clsx('flex-1 overflow-y-auto', mobileSheet ? 'p-2 min-h-[132px] max-h-[168px] sm:p-3 sm:min-h-[220px] sm:max-h-[340px]' : 'p-3 min-h-[220px] max-h-[340px]')}>
+      <div className={clsx(
+        'flex-1 min-h-0',
+        activeTab === 'moves' ? 'overflow-hidden' : 'overflow-y-auto',
+        mobileSheet ? 'h-[168px] min-h-[168px] max-h-[168px] p-2 sm:h-auto sm:min-h-[220px] sm:max-h-[340px] sm:p-3' : 'p-3 min-h-[220px] max-h-[340px]'
+      )}>
         {/* Moves Tab */}
         {activeTab === 'moves' && (
-          <div className="flex flex-col h-full justify-between gap-3">
-            <div className="flex-1 overflow-y-auto pr-1">
+          <div className={clsx('flex min-h-0 flex-col justify-between gap-3 overflow-hidden', mobileSheet ? 'h-[152px] sm:h-full' : 'h-full')}>
+            <div className="flex-1 min-h-0 pr-1">
               <MoveHistory history={history} currentMoveIndex={currentMoveIndex} />
             </div>
 
@@ -310,7 +315,7 @@ export const GameSidebar = ({
         {activeTab === 'chat' && (
           <div className="flex flex-col h-full justify-between gap-2.5">
             {/* Messages Feed */}
-            <div className="flex-1 flex flex-col gap-2 overflow-y-auto pr-1">
+            <div ref={chatScrollRef} className="flex-1 flex flex-col gap-2 overflow-y-auto overscroll-contain pr-1 [overflow-anchor:none]">
               {chatMessages.map((msg) => (
                 <div
                   key={msg.id}
@@ -331,7 +336,6 @@ export const GameSidebar = ({
                   <div>{msg.message || msg.text}</div>
                 </div>
               ))}
-              <div ref={chatEndRef} />
             </div>
 
             {/* Quick Reaction Chips */}

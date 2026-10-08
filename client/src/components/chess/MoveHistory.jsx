@@ -1,17 +1,19 @@
 import React, { useRef, useEffect } from 'react';
+import { scrollElementWithinContainer } from '../../utils/scrollWithinContainer';
 
 export const MoveHistory = ({ history, currentMoveIndex, onMoveSelect, annotations = [] }) => {
+  const scrollContainerRef = useRef(null);
   const endRef = useRef(null);
   const moveRefs = useRef(new Map());
 
-  // Auto-scroll to latest move
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [history]);
-
-  useEffect(() => {
-    if (currentMoveIndex >= 0) moveRefs.current.get(currentMoveIndex)?.scrollIntoView({ block: 'nearest' });
-  }, [currentMoveIndex]);
+    const container = scrollContainerRef.current;
+    const selectedMove = currentMoveIndex >= 0 ? moveRefs.current.get(currentMoveIndex) : null;
+    scrollElementWithinContainer(container, selectedMove || endRef.current, {
+      behavior: 'smooth',
+      align: selectedMove ? 'nearest' : 'end',
+    });
+  }, [history.length, currentMoveIndex]);
 
   // Group moves into pairs (white + black)
   const movePairs = [];
@@ -32,7 +34,11 @@ export const MoveHistory = ({ history, currentMoveIndex, onMoveSelect, annotatio
   }
 
   return (
-    <div className="flex flex-col gap-0.5 h-full overflow-y-auto pr-1 custom-scrollbar">
+    <div
+      ref={scrollContainerRef}
+      data-testid="move-history-scroll"
+      className="flex h-full min-h-0 flex-col gap-0.5 overflow-y-auto overscroll-contain pr-1 custom-scrollbar [overflow-anchor:none]"
+    >
       {movePairs.map(({ number, white, black }) => {
         const whiteIdx = (number - 1) * 2;
         const blackIdx = whiteIdx + 1;
